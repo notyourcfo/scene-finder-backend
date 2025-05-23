@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { IncomingForm, Files, Fields } from 'formidable';
-import fsPromises from 'fs/promises'; // For Promise-based fs operations
-import { createWriteStream } from 'fs'; // For createWriteStream
+import fs from 'fs'; // Use standard fs module for createWriteStream and createReadStream
 import path from 'path';
 import os from 'os';
 import axios from 'axios';
@@ -23,7 +22,7 @@ async function downloadVideo(url: string): Promise<string> {
       responseType: 'stream',
       timeout: 10000, // 10-second timeout
     });
-    const writer = createWriteStream(tempPath);
+    const writer = fs.createWriteStream(tempPath); // Use fs.createWriteStream
     response.data.pipe(writer);
     return new Promise((resolve, reject) => {
       writer.on('finish', () => resolve(tempPath));
@@ -37,7 +36,7 @@ async function downloadVideo(url: string): Promise<string> {
 // Clean up temporary file
 async function cleanupFile(filePath: string) {
   try {
-    await fsPromises.unlink(filePath);
+    await fs.promises.unlink(filePath); // Use fs.promises for unlink
   } catch (err) {
     console.error(`Failed to delete temp file ${filePath}:`, err);
   }
@@ -94,14 +93,14 @@ export async function POST(req: NextRequest) {
       }
 
       // Validate file size (Whisper limit: 25MB)
-      const stats = await fsPromises.stat(videoPath);
+      const stats = await fs.promises.stat(videoPath); // Use fs.promises for stat
       if (stats.size > 25 * 1024 * 1024) {
         throw new Error('Video file exceeds 25MB limit');
       }
 
       // Transcribe using Whisper
       const transcription = await openai.audio.transcriptions.create({
-        file: fsPromises.createReadStream(videoPath),
+        file: fs.createReadStream(videoPath), // Use fs.createReadStream
         model: 'whisper-1',
       });
 
