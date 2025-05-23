@@ -24,7 +24,14 @@ async function parseForm(req: NextRequest): Promise<{ filePath?: string; videoUr
       const file = files.file?.[0] || files.file;
       const videoUrl = fields.videoUrl?.[0] || fields.videoUrl;
       if (file) {
-        resolve({ filePath: file.filepath });
+        if (file && !Array.isArray(file)) {
+          resolve({ filePath: file.filepath });
+        } else if (videoUrl) {
+          resolve({ videoUrl });
+        } else {
+          reject(new Error("No file or URL provided"));
+        }
+        
       } else if (videoUrl) {
         resolve({ videoUrl });
       } else {
